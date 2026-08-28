@@ -1,0 +1,344 @@
+{
+  "info": {
+    "name": "Recruitment Platform API",
+    "description": "Postman collection covering all REST endpoints of the recruitment-platform Spring Boot app (Auth, Candidates, Applications).\n\n## Getting started\n1. Import this collection AND `recruitment-platform.postman_environment.json`, then select the `Recruitment Platform - Local` environment (top-right).\n2. Run **Auth > Login** first. Its test script stores the JWT in the `token` variable, and every other request uses it automatically via collection-level Bearer auth.\n3. Seeded LDAP users (password `123456`): `admin@test.com`, `hr@test.com`, `interviewer@test.com`. NOTE: a matching row must also exist in the `users` DB table for login to succeed (login checks the DB then LDAP).\n\n## Auto-captured variables\n- `token` - set by Login.\n- `candidateId` - set by Candidates > Create Candidate.\n- `applicationId` - set by Applications > Create Application.\n\nRun requests top-to-bottom for the smoothest flow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "candidateId", "value": "1" },
+    { "key": "applicationId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (ADMIN only)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@test.com\",\n  \"password\": \"123456\",\n  \"role\": \"HR\"\n}"
+            },
+            "description": "Creates a user. Requires an ADMIN JWT (log in as admin first). `role` is one of ADMIN, HR, INTERVIEWER."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "if (json && json.token) {",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "    console.log('Saved JWT to {{token}}');",
+                  "} else {",
+                  "    console.warn('No token field in login response');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "description": "Public endpoint. On success stores the returned JWT into the `token` collection variable used by all other requests."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidates",
+      "item": [
+        {
+          "name": "Create Candidate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('candidateId', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/candidates", "host": ["{{baseUrl}}"], "path": ["api", "candidates"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"+1-555-0100\"\n}"
+            },
+            "description": "Creates a candidate (roles: HR, ADMIN). Stores the new id into `candidateId`."
+          }
+        },
+        {
+          "name": "Get All Candidates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates", "host": ["{{baseUrl}}"], "path": ["api", "candidates"] }
+          }
+        },
+        {
+          "name": "Get Candidate By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}"] }
+          }
+        },
+        {
+          "name": "Update Candidate",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"phone\": \"+1-555-0199\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Search Candidates By Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/search?name=Jane",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "search"],
+              "query": [ { "key": "name", "value": "Jane" } ]
+            }
+          }
+        },
+        {
+          "name": "Add Tag",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/tags?tag=java",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "{{candidateId}}", "tags"],
+              "query": [ { "key": "tag", "value": "java" } ]
+            }
+          }
+        },
+        {
+          "name": "Search Candidates By Tag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidates/search/tag?tag=java",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidates", "search", "tag"],
+              "query": [ { "key": "tag", "value": "java" } ]
+            }
+          }
+        },
+        {
+          "name": "Upload CV",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}", "cv"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [ { "key": "file", "type": "file", "src": [], "description": "Select a PDF/DOCX CV file" } ]
+            },
+            "description": "Multipart upload. Click the 'file' row and choose a CV file before sending."
+          }
+        },
+        {
+          "name": "Get CV Text",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv/text", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}", "cv", "text"] }
+          }
+        },
+        {
+          "name": "Parse CV",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv/parse", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}", "cv", "parse"] }
+          }
+        },
+        {
+          "name": "Upload Multiple CVs (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/cv/bulk", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "cv", "bulk"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "candidateIds", "value": "1", "type": "text", "description": "Add one row per id (repeat the key)" },
+                { "key": "candidateIds", "value": "2", "type": "text" },
+                { "key": "files", "type": "file", "src": [], "description": "Add one file row per candidate id, same order" },
+                { "key": "files", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Candidate",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api", "candidates", "{{candidateId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Create Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Created', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('applicationId', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/applications", "host": ["{{baseUrl}}"], "path": ["api", "applications"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"candidateId\": {{candidateId}},\n  \"jobTitle\": \"Backend Engineer\"\n}"
+            },
+            "description": "Creates a job application (roles: HR, ADMIN). Stores the new id into `applicationId`."
+          }
+        },
+        {
+          "name": "Get All Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/applications", "host": ["{{baseUrl}}"], "path": ["api", "applications"] }
+          }
+        },
+        {
+          "name": "Get Application By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}", "host": ["{{baseUrl}}"], "path": ["api", "applications", "{{applicationId}}"] }
+          }
+        },
+        {
+          "name": "Update Stage",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/{{applicationId}}/stage?stage=SCREENING",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "applications", "{{applicationId}}", "stage"],
+              "query": [ { "key": "stage", "value": "SCREENING", "description": "APPLIED | SCREENING | INTERVIEW | OFFER | HIRED | REJECTED" } ]
+            }
+          }
+        },
+        {
+          "name": "Get Stage History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/history", "host": ["{{baseUrl}}"], "path": ["api", "applications", "{{applicationId}}", "history"] }
+          }
+        },
+        {
+          "name": "Assign Recruiter",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/{{applicationId}}/recruiter?recruiterId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "applications", "{{applicationId}}", "recruiter"],
+              "query": [ { "key": "recruiterId", "value": "1" } ]
+            }
+          }
+        },
+        {
+          "name": "Assign Interviewer",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/{{applicationId}}/interviewer?interviewerId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "applications", "{{applicationId}}", "interviewer"],
+              "query": [ { "key": "interviewerId", "value": "1" } ]
+            }
+          }
+        },
+        {
+          "name": "Add Feedback (INTERVIEWER/ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/{{applicationId}}/feedback?feedback=Strong candidate&score=8",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "applications", "{{applicationId}}", "feedback"],
+              "query": [
+                { "key": "feedback", "value": "Strong candidate" },
+                { "key": "score", "value": "8" }
+              ]
+            },
+            "description": "Requires an INTERVIEWER or ADMIN JWT."
+          }
+        },
+        {
+          "name": "Delete Application",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}", "host": ["{{baseUrl}}"], "path": ["api", "applications", "{{applicationId}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}

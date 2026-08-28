@@ -1,0 +1,215 @@
+{
+  "info": {
+    "name": "Recruitment E2E Run",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "candidateId", "value": "" },
+    { "key": "candidateId2", "value": "" },
+    { "key": "applicationId", "value": "" },
+    { "key": "recruiterId", "value": "" },
+    { "key": "interviewerId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Login",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('login 200', () => pm.response.to.have.status(200));",
+        "pm.collectionVariables.set('token', pm.response.json().token);"
+      ] } } ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"123456\"\n}" }
+      }
+    },
+    {
+      "name": "02 Register HR (recruiter)",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('register HR 201', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('recruiterId', pm.response.json().id);"
+      ] } } ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"HR Bot\",\n  \"email\": \"hr_{{$timestamp}}@test.com\",\n  \"password\": \"123456\",\n  \"role\": \"HR\"\n}" }
+      }
+    },
+    {
+      "name": "03 Register INTERVIEWER",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('register INTERVIEWER 201', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('interviewerId', pm.response.json().id);"
+      ] } } ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Iv Bot\",\n  \"email\": \"iv_{{$timestamp}}@test.com\",\n  \"password\": \"123456\",\n  \"role\": \"INTERVIEWER\"\n}" }
+      }
+    },
+    {
+      "name": "04 Create Candidate",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('create candidate 201', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('candidateId', pm.response.json().id);"
+      ] } } ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/candidates", "host": ["{{baseUrl}}"], "path": ["api","candidates"] },
+        "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane_{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0100\"\n}" }
+      }
+    },
+    {
+      "name": "05 Create Candidate 2 (for bulk)",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('create candidate2 201', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('candidateId2', pm.response.json().id);"
+      ] } } ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/candidates", "host": ["{{baseUrl}}"], "path": ["api","candidates"] },
+        "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Roe\",\n  \"email\": \"john_{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0200\"\n}" }
+      }
+    },
+    {
+      "name": "06 Get All Candidates",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/candidates", "host": ["{{baseUrl}}"], "path": ["api","candidates"] } }
+    },
+    {
+      "name": "07 Get Candidate By Id",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}"] } }
+    },
+    {
+      "name": "08 Update Candidate",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane.smith_{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0199\"\n}" }
+      }
+    },
+    {
+      "name": "09 Search By Name",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/candidates/search?name=Jane", "host": ["{{baseUrl}}"], "path": ["api","candidates","search"], "query": [ { "key": "name", "value": "Jane" } ] } }
+    },
+    {
+      "name": "10 Add Tag",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/tags?tag=java", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}","tags"], "query": [ { "key": "tag", "value": "java" } ] } }
+    },
+    {
+      "name": "11 Search By Tag",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/candidates/search/tag?tag=java", "host": ["{{baseUrl}}"], "path": ["api","candidates","search","tag"], "query": [ { "key": "tag", "value": "java" } ] } }
+    },
+    {
+      "name": "12 Upload CV",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": {
+        "method": "POST",
+        "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}","cv"] },
+        "body": { "mode": "formdata", "formdata": [ { "key": "file", "type": "file", "src": "sample_cv.pdf" } ] }
+      }
+    },
+    {
+      "name": "13 Get CV Text",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv/text", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}","cv","text"] } }
+    },
+    {
+      "name": "14 Parse CV",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}/cv/parse", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}","cv","parse"] } }
+    },
+    {
+      "name": "15 Bulk Upload CVs",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": {
+        "method": "POST",
+        "url": { "raw": "{{baseUrl}}/api/candidates/cv/bulk", "host": ["{{baseUrl}}"], "path": ["api","candidates","cv","bulk"] },
+        "body": { "mode": "formdata", "formdata": [
+          { "key": "candidateIds", "value": "{{candidateId}}", "type": "text" },
+          { "key": "candidateIds", "value": "{{candidateId2}}", "type": "text" },
+          { "key": "files", "type": "file", "src": "sample_cv.pdf" },
+          { "key": "files", "type": "file", "src": "sample_cv2.pdf" }
+        ] }
+      }
+    },
+    {
+      "name": "16 Create Application",
+      "event": [ { "listen": "test", "script": { "exec": [
+        "pm.test('create app 201', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('applicationId', pm.response.json().id);"
+      ] } } ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/applications", "host": ["{{baseUrl}}"], "path": ["api","applications"] },
+        "body": { "mode": "raw", "raw": "{\n  \"candidateId\": {{candidateId}},\n  \"jobTitle\": \"Backend Engineer\"\n}" }
+      }
+    },
+    {
+      "name": "17 Get All Applications",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/applications", "host": ["{{baseUrl}}"], "path": ["api","applications"] } }
+    },
+    {
+      "name": "18 Get Application By Id",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}"] } }
+    },
+    {
+      "name": "19 Update Stage",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/stage?stage=SCREENING", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}","stage"], "query": [ { "key": "stage", "value": "SCREENING" } ] } }
+    },
+    {
+      "name": "20 Get Stage History",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/history", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}","history"] } }
+    },
+    {
+      "name": "21 Assign Recruiter",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/recruiter?recruiterId={{recruiterId}}", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}","recruiter"], "query": [ { "key": "recruiterId", "value": "{{recruiterId}}" } ] } }
+    },
+    {
+      "name": "22 Assign Interviewer",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/interviewer?interviewerId={{interviewerId}}", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}","interviewer"], "query": [ { "key": "interviewerId", "value": "{{interviewerId}}" } ] } }
+    },
+    {
+      "name": "23 Add Feedback",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('200', () => pm.response.to.have.status(200));" ] } } ],
+      "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}/feedback?feedback=Strong&score=8", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}","feedback"], "query": [ { "key": "feedback", "value": "Strong" }, { "key": "score", "value": "8" } ] } }
+    },
+    {
+      "name": "24 Delete Application",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('204', () => pm.response.to.have.status(204));" ] } } ],
+      "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/applications/{{applicationId}}", "host": ["{{baseUrl}}"], "path": ["api","applications","{{applicationId}}"] } }
+    },
+    {
+      "name": "25 Delete Candidate 2",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('204', () => pm.response.to.have.status(204));" ] } } ],
+      "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId2}}", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId2}}"] } }
+    },
+    {
+      "name": "26 Delete Candidate",
+      "event": [ { "listen": "test", "script": { "exec": [ "pm.test('204', () => pm.response.to.have.status(204));" ] } } ],
+      "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/candidates/{{candidateId}}", "host": ["{{baseUrl}}"], "path": ["api","candidates","{{candidateId}}"] } }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+dn: dc=recruitment,dc=com
+objectClass: top
+objectClass: domain
+dc: recruitment
+
+dn: ou=people,dc=recruitment,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+dn: uid=admin,ou=people,dc=recruitment,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: System Admin
+sn: Admin
+uid: admin
+mail: admin@test.com
+userPassword: 123456
+
+dn: uid=hr,ou=people,dc=recruitment,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Test HR
+sn: HR
+uid: hr
+mail: hr@test.com
+userPassword: 123456
+
+dn: uid=interviewer,ou=people,dc=recruitment,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Test Interviewer
+sn: Interviewer
+uid: interviewer
+mail: interviewer@test.com
+userPassword: 123456
